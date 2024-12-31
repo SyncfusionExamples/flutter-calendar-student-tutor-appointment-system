@@ -29,8 +29,8 @@ class AppointmentSystem extends StatefulWidget {
 }
 
 class AppointmentSystemState extends State<AppointmentSystem> {
-  List<AppointmentRequest> pendingRequests = [];
-  List<Appointment> appointments = [];
+  final List<AppointmentRequest> _pendingRequests = [];
+  final List<Appointment> _appointments = [];
   final List<AppointmentRequest> _rejectedRequests = [];
 
   @override
@@ -41,7 +41,10 @@ class AppointmentSystemState extends State<AppointmentSystem> {
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.blue, Colors.purple],
+              colors: [
+                Colors.blue,
+                Colors.purple,
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -63,7 +66,7 @@ class AppointmentSystemState extends State<AppointmentSystem> {
       height: 450,
       child: SfCalendar(
         view: CalendarView.month,
-        dataSource: _AppointmentDataSource(appointments),
+        dataSource: _AppointmentDataSource(_appointments),
         todayHighlightColor: headerColor,
         headerStyle: CalendarHeaderStyle(
           backgroundColor: headerColor,
@@ -118,8 +121,7 @@ class AppointmentSystemState extends State<AppointmentSystem> {
             backgroundColor: Colors.blueAccent,
           ),
         ),
-        if (_rejectedRequests.isNotEmpty)
-          if (_rejectedRequests.isNotEmpty) _buildRejectedRequests(),
+        if (_rejectedRequests.isNotEmpty) _buildRejectedRequests(),
       ],
     );
   }
@@ -161,9 +163,9 @@ class AppointmentSystemState extends State<AppointmentSystem> {
         ),
         Expanded(
           child: ListView.builder(
-            itemCount: pendingRequests.length,
+            itemCount: _pendingRequests.length,
             itemBuilder: (context, index) {
-              var request = pendingRequests[index];
+              var request = _pendingRequests[index];
               return Card(
                 child: ListTile(
                   title: Text('Request from ${request.studentName}'),
@@ -196,23 +198,15 @@ class AppointmentSystemState extends State<AppointmentSystem> {
 
   void _acceptAppointment(int index) {
     setState(() {
-      var request = pendingRequests[index];
+      var request = _pendingRequests[index];
       var acceptedAppointment = Appointment(
         startTime: request.startTime,
         endTime: request.startTime.add(const Duration(minutes: 30)),
         subject: '${request.studentName} - Accepted',
         color: Colors.green,
       );
-      appointments.add(acceptedAppointment);
-      pendingRequests.removeAt(index);
-    });
-  }
-
-  void _rejectAppointment(int index) {
-    setState(() {
-      var request = pendingRequests[index];
-      _rejectedRequests.add(request);
-      pendingRequests.removeAt(index);
+      _appointments.add(acceptedAppointment);
+      _pendingRequests.removeAt(index);
     });
   }
 
@@ -276,7 +270,13 @@ class AppointmentSystemState extends State<AppointmentSystem> {
 
   void _requestAppointment(String studentName, DateTime startTime) {
     setState(() {
-      pendingRequests.add(AppointmentRequest(studentName, startTime, false));
+      _pendingRequests.add(
+        AppointmentRequest(
+          studentName,
+          startTime,
+          false,
+        ),
+      );
     });
   }
 
@@ -288,9 +288,15 @@ class AppointmentSystemState extends State<AppointmentSystem> {
           var request = _rejectedRequests[index];
           return Card(
             elevation: 4,
-            margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 12),
+            margin: const EdgeInsets.symmetric(
+              vertical: 5,
+              horizontal: 12,
+            ),
             child: ListTile(
-              leading: const Icon(Icons.cancel, color: Colors.red),
+              leading: const Icon(
+                Icons.cancel,
+                color: Colors.red,
+              ),
               title: Text(
                 'Request from ${request.studentName} at: ${request.startTime}',
               ),
@@ -300,6 +306,14 @@ class AppointmentSystemState extends State<AppointmentSystem> {
         },
       ),
     );
+  }
+
+  void _rejectAppointment(int index) {
+    setState(() {
+      var request = _pendingRequests[index];
+      _rejectedRequests.add(request);
+      _pendingRequests.removeAt(index);
+    });
   }
 }
 
