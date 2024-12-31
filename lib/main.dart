@@ -5,6 +5,7 @@ void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -22,6 +23,7 @@ class MyApp extends StatelessWidget {
 
 class AppointmentSystem extends StatefulWidget {
   const AppointmentSystem({super.key});
+
   @override
   AppointmentSystemState createState() => AppointmentSystemState();
 }
@@ -29,7 +31,7 @@ class AppointmentSystem extends StatefulWidget {
 class AppointmentSystemState extends State<AppointmentSystem> {
   List<AppointmentRequest> pendingRequests = [];
   List<Appointment> appointments = [];
-  final List<String> _rejectedRequests = [];
+  final List<AppointmentRequest> _rejectedRequests = [];
 
   @override
   Widget build(BuildContext context) {
@@ -58,16 +60,23 @@ class AppointmentSystemState extends State<AppointmentSystem> {
 
   Widget _buildCalendar(Color headerColor) {
     return SizedBox(
-      height: 300,
+      height: 450,
       child: SfCalendar(
         view: CalendarView.month,
         dataSource: _AppointmentDataSource(appointments),
+        todayHighlightColor: headerColor,
         headerStyle: CalendarHeaderStyle(
           backgroundColor: headerColor,
           textStyle: const TextStyle(
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
+          ),
+        ),
+        selectionDecoration: BoxDecoration(
+          border: Border.all(
+            color: headerColor,
+            width: 2,
           ),
         ),
       ),
@@ -81,7 +90,10 @@ class AppointmentSystemState extends State<AppointmentSystem> {
           padding: EdgeInsets.all(8.0),
           child: Text(
             'Student Calendar',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         _buildCalendar(Colors.blueAccent),
@@ -93,11 +105,12 @@ class AppointmentSystemState extends State<AppointmentSystem> {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.black,
+              color: Colors.white,
             ),
           ),
           onPressed: () => _showRequestDialog(context),
           style: ElevatedButton.styleFrom(
+            iconColor: Colors.white,
             padding: const EdgeInsets.symmetric(
               vertical: 16,
               horizontal: 24,
@@ -105,36 +118,44 @@ class AppointmentSystemState extends State<AppointmentSystem> {
             backgroundColor: Colors.blueAccent,
           ),
         ),
-        if (_rejectedRequests.isNotEmpty) _buildRejectedRequests(),
+        if (_rejectedRequests.isNotEmpty)
+          if (_rejectedRequests.isNotEmpty) _buildRejectedRequests(),
       ],
     );
   }
 
   Widget _buildTutorCalendar() {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         const Padding(
           padding: EdgeInsets.all(8.0),
           child: Text(
             'Tutor Calendar',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         _buildCalendar(Colors.deepPurple),
         const SizedBox(height: 10),
         Container(
           margin: const EdgeInsets.symmetric(vertical: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: 8,
+          ),
           decoration: BoxDecoration(
-            color: Colors.blueAccent,
+            color: Colors.deepPurple,
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Text(
-            'Pending Appointment Requests:',
+            'Pending Appointment Requests',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.black,
+              color: Colors.white,
             ),
           ),
         ),
@@ -190,7 +211,7 @@ class AppointmentSystemState extends State<AppointmentSystem> {
   void _rejectAppointment(int index) {
     setState(() {
       var request = pendingRequests[index];
-      _rejectedRequests.add(request.studentName);
+      _rejectedRequests.add(request);
       pendingRequests.removeAt(index);
     });
   }
@@ -243,8 +264,8 @@ class AppointmentSystemState extends State<AppointmentSystem> {
             onPressed: () {
               if (nameController.text.isNotEmpty) {
                 _requestAppointment(nameController.text, selectedTime);
+                Navigator.pop(context);
               }
-              Navigator.pop(context);
             },
             child: const Text('Request'),
           ),
@@ -260,30 +281,24 @@ class AppointmentSystemState extends State<AppointmentSystem> {
   }
 
   Widget _buildRejectedRequests() {
-    return Column(
-      children: [
-        const SizedBox(height: 20),
-        Container(
-          margin: const EdgeInsets.symmetric(vertical: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.lightBlueAccent.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.blueAccent, width: 1.5),
-          ),
-          child: const Text(
-            'Rejected Request:',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
+    return Expanded(
+      child: ListView.builder(
+        itemCount: _rejectedRequests.length,
+        itemBuilder: (context, index) {
+          var request = _rejectedRequests[index];
+          return Card(
+            elevation: 4,
+            margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 12),
+            child: ListTile(
+              leading: const Icon(Icons.cancel, color: Colors.red),
+              title: Text(
+                'Request from ${request.studentName} at: ${request.startTime}',
+              ),
+              trailing: const Text('Rejected'),
             ),
-          ),
-        ),
-        ..._rejectedRequests
-            .map((name) => Text('Request from $name was rejected.'))
-            .toList(),
-      ],
+          );
+        },
+      ),
     );
   }
 }
@@ -292,6 +307,7 @@ class AppointmentRequest {
   String studentName;
   DateTime startTime;
   bool isAccepted;
+
   AppointmentRequest(
     this.studentName,
     this.startTime,
