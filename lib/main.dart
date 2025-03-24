@@ -300,6 +300,10 @@ class AppointmentSystemState extends State<AppointmentSystem> {
               title: Text(
                 'Request from ${request.studentName} at: ${request.startTime}',
               ),
+              subtitle: Text(
+                'Reason: ${request.rejectionReason}',
+                style: const TextStyle(color: Colors.red),
+              ),
               trailing: const Text('Rejected'),
             ),
           );
@@ -309,11 +313,40 @@ class AppointmentSystemState extends State<AppointmentSystem> {
   }
 
   void _rejectAppointment(int index) {
-    setState(() {
-      var request = _pendingRequests[index];
-      _rejectedRequests.add(request);
-      _pendingRequests.removeAt(index);
-    });
+    TextEditingController reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reject Appointment'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+                'Please enter the reason for rejecting this appointment:'),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(hintText: 'Enter reason here'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              if (reasonController.text.isNotEmpty) {
+                setState(() {
+                  var request = _pendingRequests[index];
+                  request.rejectionReason = reasonController.text;
+                  _rejectedRequests.add(request);
+                  _pendingRequests.removeAt(index);
+                });
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Submit'),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -321,12 +354,14 @@ class AppointmentRequest {
   String studentName;
   DateTime startTime;
   bool isAccepted;
+  String? rejectionReason;
 
   AppointmentRequest(
     this.studentName,
     this.startTime,
-    this.isAccepted,
-  );
+    this.isAccepted, {
+    this.rejectionReason,
+  });
 }
 
 class _AppointmentDataSource extends CalendarDataSource {
